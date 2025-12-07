@@ -10,14 +10,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-        jvm: ['8', '17']
+        os: [ubuntu-latest, macos-15-intel, windows-latest]
+        jvm: ['8', '21']
+        include:
+          - os: "macos-15"
+            jvm: '21'
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v6
       with:
-        node-version: 20
+        node-version: 24
         cache: 'npm'
 
     - name: Build
@@ -33,7 +36,7 @@ jobs:
       uses: ./
       with:
         jvm: ${{ matrix.jvm }}
-        apps: sbt sbtn ammonite bloop:1.4.11
+        apps: sbt sbtn ammonite bloop
 
     # - uses: coursier/cache-action@v5
     - run: echo cs-version=${{ steps.cs-setup.outputs.cs-version }}
