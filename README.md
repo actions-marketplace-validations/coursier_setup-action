@@ -26,28 +26,63 @@ Inspired by [olafurpg/setup-scala](https://github.com/olafurpg/setup-scala) and 
 - `apps` (optional): Scala apps to install (`sbtn` by default)
   - space separated list of app names (from the [main channel](https://github.com/coursier/apps))
 
+- `version` (optional): Coursier version to install
+  - a release version such as `2.1.25-M26` (defaults to a recent release when left empty)
+  - `nightly` installs the latest [nightly build](https://github.com/coursier/coursier/releases/tag/nightly)
+
 - `customRepositories` (optional): ''
   - Pipe separated list of [repositories](https://get-coursier.io/docs/other-repositories) to supply to coursier
 
 - `disableDefaultRepos` (optional): 'false'
   - Whether or not to pass the --no-default flag to coursier
 
+- `mirrors` (optional): ''
+  - Newline-separated list of `from=to` entries written to `~/.config/coursier/mirror.properties` before any `cs` invocation.
+  - The `from` side may be a comma-separated list of source URLs.
+  - Unlike `customRepositories` / `disableDefaultRepos`, mirrors are applied at the resolver level to every repository coursier sees — including ones declared inside app descriptors that `customRepositories` cannot override.
+  - See [coursier mirrors](https://get-coursier.io/docs/other-mirrors).
+
 - `extraJvmArgs` (optional): ''
   - Space-separated list of `-D` JVM property args passed to every `cs` invocation. The `-J` prefix is added automatically if missing.
   - e.g. `-Dhttps.proxyHost=proxy.example.com -Dhttps.proxyPort=8080`
+
+- `launcher` (optional): Coursier launcher
+  - Leave empty (default) to install the default native binary launcher when available. On Windows ARM64, that is the jpackage JVM distribution (`cs-aarch64-pc-win32-jvm.zip`), which embeds its own runtime.
+  - `thin` (or `jvm`) selects the thin JVM launcher and `assembly` selects the assembly (fat JAR) launcher. These require Java to be installed beforehand.
+  - Other values select a native launcher flavor. Available flavors include `container`, `compat`, and `static`; for example, `container` downloads the launcher whose filename ends in `-container`.
+  - The action fails when the selected launcher is not available for the selected version and platform.
+
+- `preferredLauncher` (optional): Preferred Coursier launcher flavor
+  - Downloads the same launcher as `launcher`, but falls back to the default launcher with a warning when the flavored download returns a 4xx HTTP response.
+  - The JVM launcher values `thin`, `jvm`, and `assembly` are rejected; pass those via `launcher`.
+  - Cannot be used together with `launcher`.
+
+- `useContainerImage` (optional): Deprecated alias for `launcher: container`.
 
 ### Example with custom inputs
 
 ```yml
   steps:
-    - uses: actions/checkout@v2
-    - uses: coursier/setup-action@v1
+    - uses: actions/checkout@v4
+    - uses: coursier/setup-action@v3
       with:
         jvm: adopt:11
         jvm-index: https://url/of/your/index.json
         apps: sbtn bloop ammonite
         disableDefaultRepos: true
         customRepositories: https://packages.corp.com/maven
+        mirrors: |
+          https://repo1.maven.org/maven2=https://packages.corp.com/maven
+```
+
+### Nightly Coursier
+
+```yml
+  steps:
+    - uses: actions/checkout@v4
+    - uses: coursier/setup-action@v3
+      with:
+        version: nightly
 ```
 
 ## Outputs
@@ -60,7 +95,7 @@ This action should work well with the official Coursier [cache-action](https://g
 
 ```yml
   steps:
-    - uses: actions/checkout@v2
-    - uses: coursier/cache-action@v6
-    - uses: coursier/setup-action@v1
+    - uses: actions/checkout@v4
+    - uses: coursier/cache-action@v8
+    - uses: coursier/setup-action@v3
 ```
